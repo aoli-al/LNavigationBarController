@@ -10,13 +10,11 @@
 
 @protocol LLeftSideBarDelegate;
 
-@interface LLeftSideBarViewController : UIViewController <UITableViewDataSource, UITableViewDelegate>
+@interface LLeftSideBarViewController : UITableViewController <UITableViewDataSource, UITableViewDelegate>
 {
     id <LLeftSideBarDelegate> _delegate;
     NSArray *_titles;
 }
-
-@property UITableView * tableView;
 
 - (id)initWithTitlesArray:(NSArray *)titles addDelegate:(id<LLeftSideBarDelegate>) delegate;
 

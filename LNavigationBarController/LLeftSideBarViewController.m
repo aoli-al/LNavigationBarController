@@ -7,8 +7,11 @@
 //
 
 #import "LLeftSideBarViewController.h"
+#import "LLeftSideBarTableViewCell.h"
 
 @interface LLeftSideBarViewController ()
+
+@property (strong, nonatomic) LLeftSideBarTableViewCell * cell;
 
 @end
 
@@ -27,13 +30,12 @@
 - (void)loadView
 {
     [super loadView];
-    CGRect bounds = self.view.frame;
     
-    _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 167, bounds.size.height) style:UITableViewStylePlain];
-    _tableView.autoresizesSubviews = UIViewAutoresizingFlexibleHeight;
-    _tableView.delegate = self;
-    
-    
+    [self.tableView setFrame: self.view.frame];
+    self.tableView.autoresizesSubviews = UIViewAutoresizingFlexibleHeight;
+    self.tableView.delegate = self;
+    self.tableView.backgroundColor = [UIColor whiteColor];
+    [self.tableView registerClass:[LLeftSideBarTableViewCell class] forCellReuseIdentifier:@"cell"];
 }
 
 - (void)viewDidLoad
@@ -55,6 +57,11 @@
     return 1;
 }
 
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 50;
+}
+
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     return [_titles count];
@@ -63,9 +70,11 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *cellIdentifier = @"cell";
-    
+   
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
-    
+    cell.textLabel.text = [_titles objectAtIndex:indexPath.row];
+    cell.textLabel.font = [UIFont systemFontOfSize:15];
+    cell.backgroundColor = [UIColor whiteColor];
     return cell;
 }
 

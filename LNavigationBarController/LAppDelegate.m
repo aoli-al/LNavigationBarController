@@ -8,6 +8,8 @@
 
 #import "LAppDelegate.h"
 #import "LNavigationViewController.h"
+#import "RedVC.h"
+#import "BlueVC.h"
 
 @interface LAppDelegate()
 
@@ -20,8 +22,38 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    NSMutableArray *vcs = [NSMutableArray array];
     // Override point for customization after application launch.
-    self.viewController = [[LNavigationViewController alloc] init];
+    for (int i = 1; i <= 6; i++){
+        
+        //Check if index is pair
+        if (i % 2 == 0){
+            
+            //Creating view
+            BlueVC *blue = [[BlueVC alloc] init];
+            
+            //Navigation Controller is required
+            UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:blue];
+            
+            //Dictionary of the view and title
+            NSDictionary *view = [NSDictionary dictionaryWithObjectsAndKeys:nav, @"vc", [NSString stringWithFormat:@"Blue %i", i], @"title", nil];
+            
+            //And we finally add it to the array
+            [vcs addObject:view];
+        }
+        
+        else {
+            
+            RedVC *red = [[RedVC alloc] init];
+            
+            UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:red];
+            
+            NSDictionary *view = [NSDictionary dictionaryWithObjectsAndKeys:nav, @"vc", [NSString stringWithFormat:@"Red %i", i], @"title", nil];
+            [vcs addObject:view];
+            
+        }
+    }
+    self.viewController = [[LNavigationViewController alloc] initWithArrayOfViewController:vcs];
     self.window.rootViewController = self.viewController;
     
     self.window.backgroundColor = [UIColor whiteColor];
