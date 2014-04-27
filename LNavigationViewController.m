@@ -95,6 +95,7 @@ static LNavigationViewController * sharedViewController;
     CGRect bounds = self.view.bounds;
 
     [self refreshWithNewViewController:[[_views objectAtIndex:0] objectForKey:@"vc"]];
+    [_currentContentView.view setFrame:CGRectMake(0, 61, bounds.size.width, bounds.size.height - 61)];
     menuOpened = NO;
     [self addPanGestureToCurrentView];
     [self addTapGestureToCurrentView];
@@ -165,17 +166,41 @@ static LNavigationViewController * sharedViewController;
 {
     [_currentContentView.view removeFromSuperview];
     _currentContentView = viewController;
-    NSLog(@"%@", _currentContentView);
     _currentContentView.view.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleBottomMargin;
     [_currentContentView.view setFrame:CGRectMake(0, 61, self.view.frame.size.width, self.view.frame.size.height - 61)];
     [self.view addSubview:_currentContentView.view];
+    [self addPanGestureToCurrentView];
+    [self closeLeftSideMenu];
+}
+
+- (void)closeLeftSideBarWithViewController:(UIViewController *)viewController
+{
+    void (^animations)(void) = ^{
+        self.currentContentView.view.transform  = CGAffineTransformMakeTranslation(0, 0);
+	};
+    void (^complete)(BOOL) = ^(BOOL finished) {
+        self.currentContentView.view.userInteractionEnabled = YES;
+        self.leftSideBarViewController.view.userInteractionEnabled = YES;
+        
+        if (_tapGestureRecognizer) {
+            [self.currentContentView.view removeGestureRecognizer:_tapGestureRecognizer];
+            _tapGestureRecognizer = nil;
+        }
+        menuOpened = NO;
+        [_leftSideBarViewController.view removeFromSuperview];
+        //[self refreshWithNewViewController:viewController];
+        currentTranslate = _currentContentView.view.transform.tx;
+	};
+    self.currentContentView.view.userInteractionEnabled = NO;
+    self.currentContentView.view.userInteractionEnabled = NO;
+    [UIView animateWithDuration:MoveAnimationDuration animations:animations completion:complete];
 }
 
 #pragma mark - left side bar view controller
 
 - (void)didSelectedElementAtIndex:(NSInteger)index
 {
-    [self changeCurrentContentView:_views[index][@"vc"]];
+    [self closeLeftSideBarWithViewController:_views[index][@"vc"]];
 }
 
 #pragma mark - gesture delegate
@@ -183,10 +208,13 @@ static LNavigationViewController * sharedViewController;
 - (void)leftBarButtonPressed
 {
     if (menuOpened) {
+        NSLog(@"close");
         [self closeLeftSideMenu];
     } else {
+        NSLog(@"open");
         [self openLeftSideMenu];
     }
+    NSLog(@"Now is %d", menuOpened);
 }
 
 - (void)panInContentView:(UIPanGestureRecognizer *)panGestureRecognizer

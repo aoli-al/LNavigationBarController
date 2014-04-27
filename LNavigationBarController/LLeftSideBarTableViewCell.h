@@ -8,9 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface LLeftSideBarTableViewCell : UITableViewCell {
-    BOOL _ifSelected;
-}
+@interface LLeftSideBarTableViewCell : UITableViewCell
 
+@property (assign, nonatomic) BOOL ifSelected;
 
 @end

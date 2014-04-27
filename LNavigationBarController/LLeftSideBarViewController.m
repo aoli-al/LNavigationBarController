@@ -23,6 +23,7 @@
     if (self) {
         _delegate = delegate;
         _titles = titles;
+        _currentPage = 0;
     }
     return self;
 }
@@ -75,6 +76,12 @@
     cell.textLabel.text = [_titles objectAtIndex:indexPath.row];
     cell.textLabel.font = [UIFont systemFontOfSize:15];
     cell.backgroundColor = [UIColor whiteColor];
+    if (_currentPage == indexPath.row) {
+        [cell setSelected:YES animated:NO];
+        NSLog(@"current page is %d", _currentPage);
+    } else {
+        [cell setSelected:NO animated:YES];
+    }
     return cell;
 }
 
@@ -82,10 +89,14 @@
 
 - (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if ([_delegate respondsToSelector:@selector(didSelectedElementAtIndex:)]) {
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+     if ([_delegate respondsToSelector:@selector(didSelectedElementAtIndex:)]) {
         [_delegate didSelectedElementAtIndex:indexPath.row];
-        [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
-    }
+        NSLog(@"sadfa%d", indexPath.row);
+     }
 }
 
 @end

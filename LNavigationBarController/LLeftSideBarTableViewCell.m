@@ -40,6 +40,7 @@
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
     if (selected) {
+        NSLog(@"123");
         self.textLabel.textColor = [UIColor colorWithRed:52.0f / 255.0f green:189.0f / 255.0f blue:237.0f / 255.0f alpha:1];
         [self addSubview:_lineView];
         
@@ -47,8 +48,6 @@
         self.textLabel.textColor =  [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
         [_lineView removeFromSuperview];
     }
-    _ifSelected = selected;
-    [self setNeedsDisplay];
 }
 
 - (void)setHighlighted:(BOOL)highlighted
@@ -58,11 +57,7 @@
     } else {
         self.textLabel.textColor =  [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
     }
-    [self setNeedsDisplay];
 }
 
-- (void)drawRect:(CGRect)rect
-{
-}
 
 @end

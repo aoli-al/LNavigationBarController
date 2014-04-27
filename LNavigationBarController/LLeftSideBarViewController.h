@@ -16,6 +16,7 @@
     NSArray *_titles;
 }
 
+@property (assign, nonatomic) int currentPage;
 - (id)initWithTitlesArray:(NSArray *)titles addDelegate:(id<LLeftSideBarDelegate>) delegate;
 
 @end
