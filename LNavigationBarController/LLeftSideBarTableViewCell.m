@@ -20,16 +20,27 @@
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-        [self.textLabel setFrame:CGRectMake(25, 0, 140, 50)];
-        self.textLabel.textAlignment = NSTextAlignmentLeft;
-        self.textLabel.textColor = [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
-        self.contentView.backgroundColor = [UIColor clearColor];
-        self.textLabel.backgroundColor = [UIColor clearColor];
-        
         _lineView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 3, 50)];
-        [_lineView setBackgroundColor:[UIColor colorWithRed:52.0f / 255.0f green:189.0f / 255.0f blue:237.0f / 255.0f alpha:1]];
     }
     return self;
+}
+
+- (void)layoutSubviews
+{
+    [self.textLabel setFrame:CGRectMake(25, 0, 140, 50)];
+    self.textLabel.textAlignment = NSTextAlignmentLeft;
+    self.contentView.backgroundColor = [UIColor clearColor];
+    self.textLabel.backgroundColor = [UIColor clearColor];
+    
+    [_lineView setBackgroundColor:[UIColor colorWithRed:52.0f / 255.0f green:189.0f / 255.0f blue:237.0f / 255.0f alpha:1]];
+    if (! _setSelected) {
+        self.textLabel.textColor = [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
+        [_lineView removeFromSuperview];
+    } else {
+        self.textLabel.textColor = [UIColor colorWithRed:52.0f / 255.0f green:189.0f / 255.0f blue:237.0f / 255.0f alpha:1];
+        [self addSubview:_lineView];
+    }
+    
 }
 
 - (void)awakeFromNib
@@ -39,25 +50,25 @@
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
-    if (selected) {
-        NSLog(@"123");
+    _setSelected |= selected;
+    if (! _setSelected) {
+        self.textLabel.textColor = [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
+        [_lineView removeFromSuperview];
+     } else {
         self.textLabel.textColor = [UIColor colorWithRed:52.0f / 255.0f green:189.0f / 255.0f blue:237.0f / 255.0f alpha:1];
         [self addSubview:_lineView];
-        
-    } else {
-        self.textLabel.textColor =  [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
-        [_lineView removeFromSuperview];
-    }
+     }
 }
 
-- (void)setHighlighted:(BOOL)highlighted
+- (void)setHighlighted:(BOOL)highlighted animated:(BOOL)animated
 {
-    if (highlighted) {
+    if (! highlighted) {
+        self.textLabel.textColor = [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
+        [_lineView removeFromSuperview];
+     } else {
         self.textLabel.textColor = [UIColor colorWithRed:52.0f / 255.0f green:189.0f / 255.0f blue:237.0f / 255.0f alpha:1];
-    } else {
-        self.textLabel.textColor =  [UIColor colorWithRed:127.0f / 255.0f green:130.0f / 255.0f blue:128.0f / 255.0f alpha:1];
-    }
+        [self addSubview:_lineView];
+     }
 }
-
 
 @end

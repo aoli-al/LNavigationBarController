@@ -10,6 +10,6 @@
 
 @interface LLeftSideBarTableViewCell : UITableViewCell
 
-@property (assign, nonatomic) BOOL ifSelected;
+@property (assign, nonatomic) BOOL setSelected;
 
 @end

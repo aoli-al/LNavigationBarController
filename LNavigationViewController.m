@@ -12,8 +12,7 @@
 #import "RedVC.h"
 //#import "LLeftSideBarViewController.h"
 
-#define pi 3.1415926
-#define EASEOUT(A) 130 * sin(pi / 4  * ((A) / 130))
+#define EASEOUT(A) 130 * sin(M_PI / 4  * ((A) / 130))
 
 @interface LNavigationViewController ()
 {
@@ -21,13 +20,15 @@
     NSArray *_views;
     UITapGestureRecognizer *_tapGestureRecognizer;
     UIPanGestureRecognizer *_panGestureRecognizer;
-    CGFloat currentTranslate;
+    CGFloat currentTranslation;
 }
 
 @property (strong, nonatomic) UINavigationBar * navigationBar;
+@property (strong, nonatomic) UIButton * leftBarButton;
 @property (strong, nonatomic) LLeftSideBarViewController * leftSideBarViewController;
 @property (strong, nonatomic) UIViewController * mainViewController;
 @property (strong, nonatomic) UIViewController * currentContentView;
+
 @end
 
 @implementation LNavigationViewController
@@ -43,6 +44,7 @@ static LNavigationViewController * sharedViewController;
     self = [super init];
     if (self) {
         _views = viewControllers;
+        
         NSMutableArray * titleArray = [[NSMutableArray alloc] init];
         for (NSDictionary * dict in viewControllers) {
             [titleArray addObject:[dict objectForKey:@"title"]];
@@ -105,24 +107,11 @@ static LNavigationViewController * sharedViewController;
     [_navigationBar setBarTintColor:[UIColor colorWithRed:242.0f / 255.0f green:242.0f / 255.0f blue:240.0f / 255.0f alpha:1]];
     [_navigationBar setTranslucent:NO];
 
-    UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 25, 15)];
-    [button setAttributedTitle:[NSMutableAttributedString iconWithCode:@"" pointSize:20.0 color:[UIColor colorWithRed:128.0f / 255.0f green:131.0f / 255.0f blue:129.0f / 255.0f alpha:1]] forState:UIControlStateNormal];
-    [button setContentEdgeInsets:UIEdgeInsetsMake(0, 6, 0, 0)];
-    [button addTarget:self action:@selector(leftBarButtonPressed) forControlEvents:UIControlEventTouchUpInside];
-
-    UIBarButtonItem *barButton = [[UIBarButtonItem alloc] initWithCustomView:button];
-    self.navigationItem.leftBarButtonItem = barButton;
+    _leftBarButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 25, 15)];
+    [self setLeftBarButtonWithColor:[UIColor colorWithRed:128.0f / 255.0f green:131.0f / 255.0f blue:129.0f / 255.0f alpha:1]];
     [_navigationBar setItems:[NSArray arrayWithObject:self.navigationItem]];
 }
 
-- (void)changeCurrentContentView:(UIViewController *)contentView
-{
-    [_currentContentView.view removeFromSuperview];
-    _currentContentView = contentView;
-    _currentContentView.view.autoresizesSubviews = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleBottomMargin;
-    
-    [_currentContentView.view setFrame:CGRectMake(0, 62, self.view.bounds.size.width, self.view.bounds.size.height - 61)];
-}
 
 - (void)addTapGestureToCurrentView
 {
@@ -144,16 +133,19 @@ static LNavigationViewController * sharedViewController;
 
 - (void)openLeftSideMenu
 {
+    menuOpened = YES;
+    [self setLeftBarButtonWithColor:[UIColor colorWithRed:52.0f / 255.0f green:189.0f / 255.0f blue:237.0f / 255.0f alpha:1]];
+    [self.view insertSubview:_leftSideBarViewController.view atIndex:0];
     [self moveAnimationWithDirection:SideBarShowDirectionLeft duration:0.5];
     [self addTapGestureToCurrentView];
-    menuOpened = YES;
 }
 
 - (void)closeLeftSideMenu
 {
+    menuOpened = NO;
+    [self setLeftBarButtonWithColor:[UIColor colorWithRed:128.0f / 255.0f green:131.0f / 255.0f blue:129.0f / 255.0f alpha:1]];
     [self moveAnimationWithDirection:SideBarShowDirectionNone duration:0.5];
     [_currentContentView.view removeGestureRecognizer:_tapGestureRecognizer];
-    menuOpened = NO;
 }
 
 - (void)didReceiveMemoryWarning
@@ -162,21 +154,34 @@ static LNavigationViewController * sharedViewController;
     // Dispose of any resources that can be recreated.
 }
 
+- (void)setLeftBarButtonWithColor:(UIColor *)textColor
+{
+    [_leftBarButton setAttributedTitle:[NSMutableAttributedString iconWithCode:@"" pointSize:20.0 color:textColor] forState:UIControlStateNormal];
+    [_leftBarButton setContentEdgeInsets:UIEdgeInsetsMake(0, 6, 0, 0)];
+    [_leftBarButton addTarget:self action:@selector(leftBarButtonPressed) forControlEvents:UIControlEventTouchUpInside];
+
+    UIBarButtonItem *barButton = [[UIBarButtonItem alloc] initWithCustomView:_leftBarButton];
+    self.navigationItem.leftBarButtonItem = barButton;
+    
+}
+
 - (void)refreshWithNewViewController:(UIViewController *)viewController
 {
+    CGRect bounds = _currentContentView.view.frame;
     [_currentContentView.view removeFromSuperview];
     _currentContentView = viewController;
     _currentContentView.view.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleBottomMargin;
-    [_currentContentView.view setFrame:CGRectMake(0, 61, self.view.frame.size.width, self.view.frame.size.height - 61)];
+    [_currentContentView.view setFrame:bounds];
     [self.view addSubview:_currentContentView.view];
     [self addPanGestureToCurrentView];
-    [self closeLeftSideMenu];
 }
 
 - (void)closeLeftSideBarWithViewController:(UIViewController *)viewController
 {
+    [self refreshWithNewViewController:viewController];
+    [self setLeftBarButtonWithColor:[UIColor colorWithRed:128.0f / 255.0f green:131.0f / 255.0f blue:129.0f / 255.0f alpha:1]];
     void (^animations)(void) = ^{
-        self.currentContentView.view.transform  = CGAffineTransformMakeTranslation(0, 0);
+        self.currentContentView.view.frame = CGRectMake(0, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
 	};
     void (^complete)(BOOL) = ^(BOOL finished) {
         self.currentContentView.view.userInteractionEnabled = YES;
@@ -188,8 +193,7 @@ static LNavigationViewController * sharedViewController;
         }
         menuOpened = NO;
         [_leftSideBarViewController.view removeFromSuperview];
-        //[self refreshWithNewViewController:viewController];
-        currentTranslate = _currentContentView.view.transform.tx;
+        currentTranslation = _currentContentView.view.frame.origin.x;
 	};
     self.currentContentView.view.userInteractionEnabled = NO;
     self.currentContentView.view.userInteractionEnabled = NO;
@@ -208,13 +212,10 @@ static LNavigationViewController * sharedViewController;
 - (void)leftBarButtonPressed
 {
     if (menuOpened) {
-        NSLog(@"close");
         [self closeLeftSideMenu];
     } else {
-        NSLog(@"open");
         [self openLeftSideMenu];
     }
-    NSLog(@"Now is %d", menuOpened);
 }
 
 - (void)panInContentView:(UIPanGestureRecognizer *)panGestureRecognizer
@@ -224,44 +225,44 @@ static LNavigationViewController * sharedViewController;
     switch (panGestureRecognizer.state) {
         case UIGestureRecognizerStateBegan:
             translation = [panGestureRecognizer translationInView:_currentContentView.view].x;
-            if (translation + currentTranslate >= 0) {
+            if (translation + currentTranslation >= 0) {
                 [self.view insertSubview:_leftSideBarViewController.view atIndex:0];
             }
             break;
         case UIGestureRecognizerStateChanged:
             translation = [panGestureRecognizer translationInView:_currentContentView.view].x;
-            if (translation < 0 && currentTranslate == 0) {
-                _currentContentView.view.transform = CGAffineTransformMakeTranslation(- EASEOUT(fabs(translation)) + currentTranslate, 0);
+            if (translation < 0 && currentTranslation == 0) {
+                self.currentContentView.view.frame = CGRectMake(- EASEOUT(fabs(translation)) + currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
             }
-            else if (translation > 0 && currentTranslate > 0) {
-                _currentContentView.view.transform = CGAffineTransformMakeTranslation(EASEOUT(translation) + currentTranslate, 0);
+            else if (translation > 0 && currentTranslation > 0) {
+                self.currentContentView.view.frame = CGRectMake(EASEOUT(translation) + currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
             } else {
-                if (translation + currentTranslate > ContentOffSet) {
-                    _currentContentView.view.transform = CGAffineTransformMakeTranslation(ContentOffSet + EASEOUT(translation - ContentOffSet), 0);
+                if (translation + currentTranslation > ContentOffSet) {
+                    self.currentContentView.view.frame = CGRectMake(ContentOffSet + EASEOUT(translation - ContentOffSet), 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
                 }
-                else if (translation + currentTranslate < 0) {
-                    _currentContentView.view.transform = CGAffineTransformMakeTranslation(-EASEOUT(fabs(translation) - ContentOffSet), 0);
+                else if (translation + currentTranslation < 0) {
+                    self.currentContentView.view.frame = CGRectMake(-EASEOUT(fabs(translation) - ContentOffSet), 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
                 } else {
-                    _currentContentView.view.transform = CGAffineTransformMakeTranslation(translation + currentTranslate, 0);
+                    self.currentContentView.view.frame = CGRectMake(translation + currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
                 }
             }
             break;
         case UIGestureRecognizerStateCancelled:
-            _currentContentView.view.transform = CGAffineTransformMakeTranslation(currentTranslate, 0);
-            if (currentTranslate == 0) {
+            self.currentContentView.view.frame = CGRectMake(currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
+            if (currentTranslation == 0) {
                 [_leftSideBarViewController.view removeFromSuperview];
             }
             break;
         case UIGestureRecognizerStateEnded:
-            currentTranslate = _currentContentView.view.transform.tx;
+            currentTranslation = _currentContentView.view.frame.origin.x;
             if (! menuOpened) {
-                if (currentTranslate < ContentMinOffSet) {
+                if (currentTranslation < ContentMinOffSet) {
                     [self closeLeftSideMenu];
                 } else {
                     [self openLeftSideMenu];
                 }
             } else {
-                if (currentTranslate < ContentOffSet - ContentMinOffSet) {
+                if (currentTranslation < ContentOffSet - ContentMinOffSet) {
                     [self closeLeftSideMenu];
                 } else {
                     [self openLeftSideMenu];
@@ -281,19 +282,18 @@ static LNavigationViewController * sharedViewController;
 		switch (direction) {
             case SideBarShowDirectionNone:
             {
-                self.currentContentView.view.transform  = CGAffineTransformMakeTranslation(0, 0);
+                self.currentContentView.view.frame = CGRectMake(0, 61, self.view.frame.size.width, self.view.frame.size.height - 61);
             }
                 break;
             case SideBarShowDirectionLeft:
             {
                 
-                [self.view insertSubview:_leftSideBarViewController.view atIndex:0];
-                self.currentContentView.view.transform  = CGAffineTransformMakeTranslation(ContentOffSet, 0);
+                self.currentContentView.view.frame = CGRectMake(ContentOffSet, 61, self.view.frame.size.width, self.view.frame.size.height - 61);
             }
                 break;
             case SideBarShowDirectionRight:
             {
-                self.currentContentView.view.transform  = CGAffineTransformMakeTranslation(-ContentOffSet, 0);
+                self.currentContentView.view.frame = CGRectMake(-ContentOffSet, 61, self.view.frame.size.width, self.view.frame.size.height - 61);
             }
                 break;
             default:
@@ -315,7 +315,7 @@ static LNavigationViewController * sharedViewController;
             [self addTapGestureToCurrentView];
             menuOpened = YES;
         }
-        currentTranslate = _currentContentView.view.transform.tx;
+        currentTranslation = _currentContentView.view.frame.origin.x;
 	};
     self.currentContentView.view.userInteractionEnabled = NO;
     self.currentContentView.view.userInteractionEnabled = NO;
