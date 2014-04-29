@@ -8,8 +8,6 @@
 
 #import "LNavigationViewController.h"
 #import "NSMutableAttributedString+FontAwesomeIcon.h"
-#import "BlueVC.h"
-#import "RedVC.h"
 //#import "LLeftSideBarViewController.h"
 
 #define EASEOUT(A) 130 * sin(M_PI / 4  * ((A) / 130))
@@ -110,6 +108,7 @@ static LNavigationViewController * sharedViewController;
     _leftBarButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 25, 15)];
     [self setLeftBarButtonWithColor:[UIColor colorWithRed:128.0f / 255.0f green:131.0f / 255.0f blue:129.0f / 255.0f alpha:1]];
     [_navigationBar setItems:[NSArray arrayWithObject:self.navigationItem]];
+    _navigationBar.topItem.title = _views[0][@"title"];
 }
 
 
@@ -176,35 +175,15 @@ static LNavigationViewController * sharedViewController;
     [self addPanGestureToCurrentView];
 }
 
-- (void)closeLeftSideBarWithViewController:(UIViewController *)viewController
-{
-    [self refreshWithNewViewController:viewController];
-    [self setLeftBarButtonWithColor:[UIColor colorWithRed:128.0f / 255.0f green:131.0f / 255.0f blue:129.0f / 255.0f alpha:1]];
-    void (^animations)(void) = ^{
-        self.currentContentView.view.frame = CGRectMake(0, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
-	};
-    void (^complete)(BOOL) = ^(BOOL finished) {
-        self.currentContentView.view.userInteractionEnabled = YES;
-        self.leftSideBarViewController.view.userInteractionEnabled = YES;
-        
-        if (_tapGestureRecognizer) {
-            [self.currentContentView.view removeGestureRecognizer:_tapGestureRecognizer];
-            _tapGestureRecognizer = nil;
-        }
-        menuOpened = NO;
-        [_leftSideBarViewController.view removeFromSuperview];
-        currentTranslation = _currentContentView.view.frame.origin.x;
-	};
-    self.currentContentView.view.userInteractionEnabled = NO;
-    self.currentContentView.view.userInteractionEnabled = NO;
-    [UIView animateWithDuration:MoveAnimationDuration animations:animations completion:complete];
-}
 
 #pragma mark - left side bar view controller
 
 - (void)didSelectedElementAtIndex:(NSInteger)index
 {
-    [self closeLeftSideBarWithViewController:_views[index][@"vc"]];
+//    [self closeLeftSideBarWithViewController:_views[index][@"vc"]];
+    [self refreshWithNewViewController:_views[index][@"vc"]];
+    self.navigationBar.topItem.title = _views[index][@"title"];
+    [self closeLeftSideMenu];
 }
 
 #pragma mark - gesture delegate
@@ -244,6 +223,10 @@ static LNavigationViewController * sharedViewController;
                     self.currentContentView.view.frame = CGRectMake(-EASEOUT(fabs(translation) - ContentOffSet), 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
                 } else {
                     self.currentContentView.view.frame = CGRectMake(translation + currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
+                    dispatch_async(dispatch_get_main_queue(), ^(void){
+                        NSLog(@"setting'");
+                        [_currentContentView.view setBackgroundColor:[UIColor colorWithRed:244.0f / 255.0f green:244.0f / 255.0f blue:242.0f / 255.0f alpha:(translation + currentTranslation) / ContentOffSet]];
+                    });
                 }
             }
             break;
@@ -309,13 +292,15 @@ static LNavigationViewController * sharedViewController;
                 [self.currentContentView.view removeGestureRecognizer:_tapGestureRecognizer];
                 _tapGestureRecognizer = nil;
             }
-            menuOpened = NO;
-            [_leftSideBarViewController.view removeFromSuperview];
+            if (! menuOpened) {
+                [_leftSideBarViewController.view removeFromSuperview];
+            }
         } else {
             [self addTapGestureToCurrentView];
             menuOpened = YES;
         }
         currentTranslation = _currentContentView.view.frame.origin.x;
+        [_currentContentView.view setBackgroundColor:[UIColor colorWithRed:244.0f / 255.0f green:244.0f / 255.0f blue:242.0f / 255.0f alpha:(currentTranslation) / ContentOffSet]];
 	};
     self.currentContentView.view.userInteractionEnabled = NO;
     self.currentContentView.view.userInteractionEnabled = NO;
