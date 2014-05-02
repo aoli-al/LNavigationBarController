@@ -17,7 +17,8 @@
     BOOL menuOpened;
     NSArray *_views;
     UITapGestureRecognizer *_tapGestureRecognizer;
-    UIPanGestureRecognizer *_panGestureRecognizer;
+    UISwipeGestureRecognizer *_leftSwipeGestureRecognizer;
+    UISwipeGestureRecognizer *_rightSwipeGestureRecognizer;
     CGFloat currentTranslation;
 }
 
@@ -77,9 +78,7 @@ static LNavigationViewController * sharedViewController;
         _currentContentView = [[UIViewController alloc] init];
     }
     
-//    [_mainViewController.view addSubview:_navigationBar];
     [self.view addSubview:_navigationBar];
-//    [self.view addSubview:_mainViewController.view];
     [self addChildViewController:_mainViewController];
     [self addChildViewController:_leftSideBarViewController];
 }
@@ -97,8 +96,6 @@ static LNavigationViewController * sharedViewController;
     [self refreshWithNewViewController:[[_views objectAtIndex:0] objectForKey:@"vc"]];
     [_currentContentView.view setFrame:CGRectMake(0, 61, bounds.size.width, bounds.size.height - 61)];
     menuOpened = NO;
-    [self addPanGestureToCurrentView];
-    [self addTapGestureToCurrentView];
 
     [_leftSideBarViewController.view setFrame:CGRectMake(0, 61, ContentOffSet, bounds.size.height)];
     [_navigationBar setFrame:CGRectMake(0, 0, bounds.size.width, 61)];
@@ -114,20 +111,22 @@ static LNavigationViewController * sharedViewController;
 
 - (void)addTapGestureToCurrentView
 {
-    if (_tapGestureRecognizer) {
-        [_currentContentView.view removeGestureRecognizer:_tapGestureRecognizer];
-    }
-    _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:_currentContentView action:NULL];
-    [_currentContentView.view addGestureRecognizer:_tapGestureRecognizer];
 }
 
-- (void)addPanGestureToCurrentView
+- (void)addSwipeGestureToCurrentView
 {
-    if (_panGestureRecognizer) {
-        [_currentContentView.view removeGestureRecognizer:_panGestureRecognizer];
+    if (_leftSwipeGestureRecognizer) {
+        [_currentContentView.view removeGestureRecognizer:_leftSwipeGestureRecognizer];
     }
-    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panInContentView:)];
-    [_currentContentView.view addGestureRecognizer:_panGestureRecognizer];
+    if (_rightSwipeGestureRecognizer) {
+        [_rightSwipeGestureRecognizer.view removeGestureRecognizer:_rightSwipeGestureRecognizer];
+    }
+    _leftSwipeGestureRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(leftSwipeInContentView:)];
+    [_leftSwipeGestureRecognizer setDirection:UISwipeGestureRecognizerDirectionLeft];
+    [_currentContentView.view addGestureRecognizer:_leftSwipeGestureRecognizer];
+    _rightSwipeGestureRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(rightSwipeInContentView:)];
+    [_rightSwipeGestureRecognizer setDirection:UISwipeGestureRecognizerDirectionRight];
+    [_currentContentView.view addGestureRecognizer:_rightSwipeGestureRecognizer];
 }
 
 - (void)openLeftSideMenu
@@ -137,6 +136,7 @@ static LNavigationViewController * sharedViewController;
     [self.view insertSubview:_leftSideBarViewController.view atIndex:0];
     [self moveAnimationWithDirection:SideBarShowDirectionLeft duration:0.5];
     [self addTapGestureToCurrentView];
+    [self.currentContentView.view setBackgroundColor:[UIColor colorWithRed:244.0f / 255.0f green:244.0f / 255.0f blue:242.0f / 255.0f alpha:1 ]];
 }
 
 - (void)closeLeftSideMenu
@@ -145,6 +145,7 @@ static LNavigationViewController * sharedViewController;
     [self setLeftBarButtonWithColor:[UIColor colorWithRed:128.0f / 255.0f green:131.0f / 255.0f blue:129.0f / 255.0f alpha:1]];
     [self moveAnimationWithDirection:SideBarShowDirectionNone duration:0.5];
     [_currentContentView.view removeGestureRecognizer:_tapGestureRecognizer];
+    [_currentContentView.view setBackgroundColor:[UIColor whiteColor]];
 }
 
 - (void)didReceiveMemoryWarning
@@ -171,8 +172,9 @@ static LNavigationViewController * sharedViewController;
     _currentContentView = viewController;
     _currentContentView.view.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleBottomMargin;
     [_currentContentView.view setFrame:bounds];
+    [_currentContentView.view setBackgroundColor:[UIColor whiteColor]];
     [self.view addSubview:_currentContentView.view];
-    [self addPanGestureToCurrentView];
+    [self addSwipeGestureToCurrentView];
 }
 
 
@@ -197,64 +199,19 @@ static LNavigationViewController * sharedViewController;
     }
 }
 
-- (void)panInContentView:(UIPanGestureRecognizer *)panGestureRecognizer
+- (void)tapOnConetntView
 {
-    
-    CGFloat translation;
-    switch (panGestureRecognizer.state) {
-        case UIGestureRecognizerStateBegan:
-            translation = [panGestureRecognizer translationInView:_currentContentView.view].x;
-            if (translation + currentTranslation >= 0) {
-                [self.view insertSubview:_leftSideBarViewController.view atIndex:0];
-            }
-            break;
-        case UIGestureRecognizerStateChanged:
-            translation = [panGestureRecognizer translationInView:_currentContentView.view].x;
-            if (translation < 0 && currentTranslation == 0) {
-                self.currentContentView.view.frame = CGRectMake(- EASEOUT(fabs(translation)) + currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
-            }
-            else if (translation > 0 && currentTranslation > 0) {
-                self.currentContentView.view.frame = CGRectMake(EASEOUT(translation) + currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
-            } else {
-                if (translation + currentTranslation > ContentOffSet) {
-                    self.currentContentView.view.frame = CGRectMake(ContentOffSet + EASEOUT(translation - ContentOffSet), 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
-                }
-                else if (translation + currentTranslation < 0) {
-                    self.currentContentView.view.frame = CGRectMake(-EASEOUT(fabs(translation) - ContentOffSet), 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
-                } else {
-                    self.currentContentView.view.frame = CGRectMake(translation + currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
-                    dispatch_async(dispatch_get_main_queue(), ^(void){
-                        NSLog(@"setting'");
-                        [_currentContentView.view setBackgroundColor:[UIColor colorWithRed:244.0f / 255.0f green:244.0f / 255.0f blue:242.0f / 255.0f alpha:(translation + currentTranslation) / ContentOffSet]];
-                    });
-                }
-            }
-            break;
-        case UIGestureRecognizerStateCancelled:
-            self.currentContentView.view.frame = CGRectMake(currentTranslation, 61, self.view.bounds.size.width, self.view.bounds.size.height - 61);
-            if (currentTranslation == 0) {
-                [_leftSideBarViewController.view removeFromSuperview];
-            }
-            break;
-        case UIGestureRecognizerStateEnded:
-            currentTranslation = _currentContentView.view.frame.origin.x;
-            if (! menuOpened) {
-                if (currentTranslation < ContentMinOffSet) {
-                    [self closeLeftSideMenu];
-                } else {
-                    [self openLeftSideMenu];
-                }
-            } else {
-                if (currentTranslation < ContentOffSet - ContentMinOffSet) {
-                    [self closeLeftSideMenu];
-                } else {
-                    [self openLeftSideMenu];
-                }
-            }
-            break;
-        default:
-            break;
-    }
+    [self closeLeftSideMenu];
+}
+
+- (void)leftSwipeInContentView:(UISwipeGestureRecognizer *)swipeGestureRecognizer
+{
+    [self closeLeftSideMenu];
+}
+
+- (void)rightSwipeInContentView:(UISwipeGestureRecognizer *)swipeGestureRecognizer
+{
+    [self openLeftSideMenu];
 }
 
 #pragma animation
@@ -284,9 +241,6 @@ static LNavigationViewController * sharedViewController;
         }
 	};
     void (^complete)(BOOL) = ^(BOOL finished) {
-        self.currentContentView.view.userInteractionEnabled = YES;
-        self.leftSideBarViewController.view.userInteractionEnabled = YES;
-        
         if (direction == SideBarShowDirectionNone) {
             if (_tapGestureRecognizer) {
                 [self.currentContentView.view removeGestureRecognizer:_tapGestureRecognizer];
@@ -300,10 +254,7 @@ static LNavigationViewController * sharedViewController;
             menuOpened = YES;
         }
         currentTranslation = _currentContentView.view.frame.origin.x;
-        [_currentContentView.view setBackgroundColor:[UIColor colorWithRed:244.0f / 255.0f green:244.0f / 255.0f blue:242.0f / 255.0f alpha:(currentTranslation) / ContentOffSet]];
 	};
-    self.currentContentView.view.userInteractionEnabled = NO;
-    self.currentContentView.view.userInteractionEnabled = NO;
     [UIView animateWithDuration:duration animations:animations completion:complete];
 }
 
